@@ -1,0 +1,150 @@
+```sh
+
+git clone https://github.com/bitcoin/bitcoin.git QuantumCoin
+
+cd QuantumCoin
+
+```
+
+```sh
+
+sudo apt-get update
+
+sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 libssl-dev libevent-dev
+
+sudo apt-get install libboost-all-dev
+
+sudo apt-get install libdb-dev libdb++-dev
+
+sudo apt-get install libminiupnpc-dev
+
+sudo apt-get install libzmq3-dev
+
+```
+
+void GenerateRSAKeys(std::string& public_key, std::string& private_key) {
+
+    RSA *keypair = RSA_generate_key(2048, RSA_F4, NULL, NULL);
+
+
+
+    BIO *pri = BIO_new(BIO_s_mem());
+
+    BIO *pub = BIO_new(BIO_s_mem());
+
+
+
+    PEM_write_bio_RSAPrivateKey(pri, keypair, NULL, NULL, 0, NULL, NULL);
+
+    PEM_write_bio_RSAPublicKey(pub, keypair);
+
+
+
+    size_t pri_len = BIO_pending(pri);
+
+    size_t pub_len = BIO_pending(pub);
+
+
+
+    char *pri_key = (char*)malloc(pri_len + 1);
+
+    char *pub_key = (char*)malloc(pub_len + 1);
+
+
+
+    BIO_read(pri, pri_key, pri_len);
+
+    BIO_read(pub, pub_key, pub_len);
+
+
+
+    pri_key[pri_len] = '\0';
+
+    pub_key[pub_len] = '\0';
+
+
+
+    private_key = std::string(pri_key);
+
+    public_key = std::string(pub_key);
+
+
+
+    BIO_free_all(pri);
+
+    BIO_free_all(pub);
+
+    RSA_free(keypair);
+
+    free(pri_key);
+
+    free(pub_key);
+
+}
+
+AES_KEY aes_key;
+
+    unsigned char aes_key_data[32];
+
+    RAND_bytes(aes_key_data, sizeof(aes_key_data));
+
+    AES_set_encrypt_key(aes_key_data, 256, &aes_key);
+
+
+
+    std::vector<unsigned char> iv(AES_BLOCK_SIZE);
+
+    RAND_bytes(iv.data(), iv.size());
+
+
+
+    std::vector<unsigned char> encrypted_data_vec(data.size() + AES_BLOCK_SIZE);
+
+    AES_cbc_encrypt((unsigned char*)data.c_str(), encrypted_data_vec.data(), data.size(), &aes_key, iv.data(), AES_ENCRYPT);
+
+
+
+    encrypted_data = std::string(iv.begin(), iv.end()) + std::string(encrypted_data_vec.begin(), encrypted_data_vec.end());
+
+
+
+    RSA *rsa = RSA_new();
+
+    BIO *keybio = BIO_new_mem_buf((void*)public_key.c_str(), -1);
+
+    PEM_read_bio_RSAPublicKey(keybio, &rsa, NULL, NULL);
+
+
+
+    unsigned char encrypted_key_data[RSA_size(rsa)];
+
+    RSA_public_encrypt(sizeof(aes_key_data), aes_key_data, encrypted_key_data, rsa, RSA_PKCS1_OAEP_PADDING);
+
+
+
+    encrypted_key = std::string((char*)encrypted_key_data, RSA_size(rsa));
+
+
+
+    RSA_free(rsa);
+
+    BIO_free_all(keybio);
+
+}
+
+```
+```sh
+
+./autogen.sh
+
+./configure
+
+```
+
+```sh
+
+make
+
+```
+
+
